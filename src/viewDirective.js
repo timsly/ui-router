@@ -36,7 +36,7 @@ function $ViewDirective(   $state,   $compile,   $controller,   $animator,   $an
           viewLocals = locals;
           view.state = locals.$$state;
 
-          animate.enter(angular.element('<div></div>').html(locals.$template).children(), element);
+          animate.enter(angular.element('<div></div>').html(locals.$template).contents(), element);
           var link = $compile(element.contents());
           viewScope = scope.$new();
           if (locals.$$controller) {
