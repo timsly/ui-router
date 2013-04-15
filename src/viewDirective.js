@@ -1,6 +1,9 @@
 
-$ViewDirective.$inject = ['$state', '$compile', '$controller', '$animator', '$anchorScroll'];
-function $ViewDirective(   $state,   $compile,   $controller,   $animator,   $anchorScroll) {
+$ViewDirective.$inject = ['$state', '$compile', '$controller', '$injector', '$anchorScroll'];
+function $ViewDirective(   $state,   $compile,   $controller,   $injector,   $anchorScroll) {
+  // Unfortunately there is no neat way to ask $injector if a service exists
+  var $animator; try { $animator = $injector.get('$animator'); } catch (e) { /* do nothing */ }
+
   var directive = {
     restrict: 'ECA',
     terminal: true,
@@ -8,7 +11,7 @@ function $ViewDirective(   $state,   $compile,   $controller,   $animator,   $an
       var viewScope, viewLocals,
         name = attr[directive.name] || attr.name || '',
         onloadExp = attr.onload || '',
-        animate = $animator(scope, attr);
+        animate = $animator && $animator(scope, attr);
       
       // Find the details of the parent view directive (if any) and use it
       // to derive our own qualified view name, then hang our own details
@@ -27,7 +30,9 @@ function $ViewDirective(   $state,   $compile,   $controller,   $animator,   $an
 
         // Destroy previous view scope and remove content (if any)
         if (viewScope) {
-          animate.leave(element.contents(), element);
+          if (animate) animate.leave(element.contents(), element);
+          else element.html('');
+
           viewScope.$destroy();
           viewScope = null;
         }
@@ -36,8 +41,16 @@ function $ViewDirective(   $state,   $compile,   $controller,   $animator,   $an
           viewLocals = locals;
           view.state = locals.$$state;
 
-          animate.enter(angular.element('<div></div>').html(locals.$template).contents(), element);
-          var link = $compile(element.contents());
+          var contents;
+          if (animate) {
+            contents = angular.element('<div></div>').html(locals.$template).contents();
+            animate.enter(contents, element);
+          } else {
+            element.html(locals.$template);
+            contents = element.contents();
+          }
+
+          var link = $compile(contents);
           viewScope = scope.$new();
           if (locals.$$controller) {
             locals.$scope = viewScope;
