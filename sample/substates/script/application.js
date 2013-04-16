@@ -1,5 +1,5 @@
-﻿var app = angular.module('sample', ['ui.bootstrap', 'ui.state']);app.config(['$stateProvider', '$routeProvider',       function ($stateProvider, $routeProvider) {
-           $routeProvider               .otherwise({ redirectTo: '/' });
+﻿var app = angular.module('sample', ['ui.bootstrap', 'ui.state']);app.config(['$stateProvider', '$urlRouterProvider',       function ($stateProvider, $urlRouterProvider) {
+            $urlRouterProvider                .otherwise('/');
 
             $stateProvider
                 .state('home', {
@@ -20,7 +20,7 @@
                     }
                 })
                 .state('blog', {
-                    url: '/blog',
+                    url: '/blog',					abstract: true,
                     views: {
                         'main': {
                             templateUrl: 'tpl/blog.html',
@@ -34,7 +34,7 @@
                 })				.state('blog.recent', {					url: '',					views: {                        '': {                            templateUrl: 'tpl/blog.list.html',                            controller: function($scope, blog) {                                $scope.title = "Recent Posts";                                $scope.posts = blog.getRecentPosts();                            }                        }                    }				})
                 .state('blog.category', {
                     url: '/category/{category}',
-                    views: {
+                    views: {						'': {                            templateUrl: 'tpl/blog.list.html',                            controller: function($scope, $routeParams, blog) {                                $scope.title = $routeParams.category;                                $scope.posts = blog.getPostsByCategory($routeParams.category);                            }                        },
                         'crumbs@': {
                             templateUrl: 'tpl/crumbs.html',
                             controller: function($scope, $routeParams) {
@@ -42,13 +42,6 @@
                                     { link: '#/blog', title: 'blog' },
                                     { link: '#/blog/category/' + $routeParams.category, title: "Category: " + $routeParams.category }
                                 ];
-                            }
-                        },
-                        '': {
-                            templateUrl: 'tpl/blog.list.html',
-                            controller: function($scope, $routeParams, blog) {
-                                $scope.title = $routeParams.category;
-                                $scope.posts = blog.getPostsByCategory($routeParams.category);
                             }
                         }
                     }
@@ -76,7 +69,7 @@
                 })
                 .state('blog.post', {
                     url: '/post/{post}',
-                    views: {
+                    views: {						'': {                            templateUrl: 'tpl/blog.post.html',                            controller: function($scope, $routeParams, blog) {                                printStack("Running controller for content");                                var post = blog.getPost($routeParams.post);                                $scope.post = post;                            }                        },
                         'crumbs@': {
                             templateUrl: 'tpl/crumbs.html',
                             controller: function($scope, $routeParams) {
@@ -84,14 +77,6 @@
                                     { link: '#/blog', title: 'blog' },
                                     { link: '#/blog/post/' + $routeParams.post, title: "Post: " + $routeParams.post }
                                 ];
-                            }
-                        },
-                        '': {
-                            templateUrl: 'tpl/blog.post.html',
-                            controller: function($scope, $routeParams, blog) {
-                                printStack("Running controller for content");
-                                var post = blog.getPost($routeParams.post);
-                                $scope.post = post;
                             }
                         }
                     }
@@ -173,39 +158,12 @@ app.animation('wave-enter', function ($rootScope, $timeout) {
     };
 });
 
-app.animation('wave-leave', function ($rootScope, $timeout) {
-    return {
-        setup: function (element) {
-            //this is called before the animation
-            $(element).addClass('wave-leave-setup');
-        },
-        start: function (element, done, memo) {
-            //this is where the animation is expected to be run
-            $(element).addClass('wave-leave-start');
-
-            $timeout(function () {
-                $(element).removeClass('wave-leave-setup');
-                $(element).removeClass('wave-leave-start');
-                done();
-            }, 2000);
-
-            //done();
-            //jQuery(element).animate({
-            //    'border-width': 20
-            //}, function () {
-            //    //call done to close when the animation is complete
-            //    done();
-            //});
-        }
-    };
-});
-
+app.animation('wave-enter', function ($rootScope, $timeout) {    return {        setup: function (element) {            var elm = $(element);            var parent = elm.parent();            elm.addClass('wave-enter-setup');            parent.css({ 'height': elm.height() });            parent.addClass('stage');            return $rootScope.$watch(function () {                parent.css({ 'height': elm.height() });            });        },        start: function (element, done, memo) {            var elm = $(element);            var parent = elm.parent();            elm.addClass('wave-enter-start');            $timeout(function () {                memo();                elm.removeClass('wave-enter-setup');                elm.removeClass('wave-enter-start');                parent.removeClass('stage');                parent.css('height', null);                done();            }, 2000);        }    };});app.animation('wave-leave', function ($rootScope, $timeout) {    return {        setup: function (element) {            $(element).addClass('wave-leave-setup');        },        start: function (element, done, memo) {            $(element).addClass('wave-leave-start');            $timeout(function () {                $(element).removeClass('wave-leave-setup');                $(element).removeClass('wave-leave-start');                done();            }, 2000);        }    };});
 
 function clean(state) {
 
 }
-function PageController() {
-
+function PageController($scope, $state) {    $scope.states = JSON.stringify($state.current, null, 2);		$scope.$on('$stateChangeSuccess', function() {		$scope.states = JSON.stringify($state.current, null, 2);	});	    $scope.opts = {        backdropFade: true,        dialogFade: true    };        $scope.openRoutes = function () {        $scope.showRoutes = true;    };    $scope.openStates = function () {        $scope.showStates = true;    };    $scope.openTransitions = function () {        $scope.showTransitions = true;    };    $scope.close = function () {        $scope.showRoutes = false;        $scope.showStates = false;        $scope.showTransitions = false;    };
 }
 
 function printStack(message) {
