@@ -7,8 +7,9 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-ngdocs');
   grunt.loadNpmTasks('grunt-karma');
-  
+
   // Project configuration.
   grunt.initConfig({
     builddir: 'build',
@@ -72,31 +73,36 @@ module.exports = function (grunt) {
     connect: {
       server: {}
     },
-  karma: {
-    options: {
-      configFile: 'config/karma.js'
+    karma: {
+      options: {
+        configFile: 'config/karma.js'
+      },
+      unit: {
+        singleRun: true
+      },
+      background: {
+        background: true,
+        browsers: [ grunt.option('browser') || 'PhantomJS' ]
+      }
     },
-    unit: {
-      singleRun: true
-    },
-    background: {
-      background: true,
-      browsers: [ grunt.option('browser') || 'PhantomJS' ]
+
+    //https://npmjs.org/package/grunt-ngdocs
+    ngdocs: {
+      options: {
+        dest: 'docs',
+        title: "Angular UI Router",
+        //Not using HTML5 mode makes it easier to support deep linking for now.
+        html5Mode: false
+      },
+      all: ['src/**/*.js']
     }
-  }
   });
 
   grunt.registerTask('default', ['build', 'jshint', 'karma:unit']);
   grunt.registerTask('build', 'Perform a normal build', ['concat', 'uglify']);
-  grunt.registerTask('dist', 'Perform a clean build and generate documentation', ['clean', 'build', 'jsdoc']);
+  grunt.registerTask('dist', 'Perform a clean build and generate documentation', ['clean', 'build', 'ngdocs']);
   grunt.registerTask('release', 'Tag and perform a release', ['prepare-release', 'dist', 'perform-release']);
   grunt.registerTask('dev', 'Run dev server and watch for changes', ['build', 'connect', 'karma:background', 'watch']);
-
-  grunt.registerTask('jsdoc', 'Generate documentation', function () {
-    promising(this,
-      system('node_modules/jsdoc/jsdoc -c config/jsdoc.js -d \'' + grunt.config('builddir') + '\'/doc src')
-    );
-  });
 
   grunt.registerTask('publish-pages', 'Publish a clean build, docs, and sample to github.io', function () {
     promising(this,
@@ -104,30 +110,30 @@ module.exports = function (grunt) {
         shjs.rm('-rf', 'build');
         return system('git checkout gh-pages');
       }).then(function () {
-        return system('git merge master');
-      }).then(function () {
-        return system('grunt dist');
-      }).then(function () {
-        return system('git commit -a -m \'Automatic gh-pages build\'');
-      }).then(function () {
-        return system('git checkout master');
-      })
+          return system('git merge master');
+        }).then(function () {
+          return system('grunt dist');
+        }).then(function () {
+          return system('git commit -a -m \'Automatic gh-pages build\'');
+        }).then(function () {
+          return system('git checkout master');
+        })
     );
   });
 
   grunt.registerTask('prepare-release', function () {
     var bower = grunt.file.readJSON('bower.json'),
-        version = bower.version;
+      version = bower.version;
     if (version != grunt.config('pkg.version')) throw 'Version mismatch in bower.json';
 
     promising(this,
       ensureCleanMaster().then(function () {
         return exec('git tag -l \'' + version + '\'');
       }).then(function (result) {
-        if (result.stdout.trim() !== '') throw 'Tag \'' + version + '\' already exists';
-        grunt.config('buildtag', '');
-        grunt.config('builddir', 'release');
-      })
+          if (result.stdout.trim() !== '') throw 'Tag \'' + version + '\' already exists';
+          grunt.config('buildtag', '');
+          grunt.config('builddir', 'release');
+        })
     );
   });
 
@@ -137,10 +143,10 @@ module.exports = function (grunt) {
     var version = grunt.config('pkg.version'), releasedir = grunt.config('builddir');
     promising(this,
       system('git add \'' + releasedir + '\'').then(function () {
-        return system('git commit -m \'release ' + version + '\'');  
+        return system('git commit -m \'release ' + version + '\'');
       }).then(function () {
-        return system('git tag \'' + version + '\'');
-      })
+          return system('git tag \'' + version + '\'');
+        })
     );
   });
 
@@ -173,7 +179,7 @@ module.exports = function (grunt) {
       if (result.stdout.trim() !== 'refs/heads/master') throw 'Not on master branch, aborting';
       return exec('git status --porcelain');
     }).then(function (result) {
-      if (result.stdout.trim() !== '') throw 'Working copy is dirty, aborting';
-    });
+        if (result.stdout.trim() !== '') throw 'Working copy is dirty, aborting';
+      });
   }
 };

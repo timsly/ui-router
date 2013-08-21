@@ -1,3 +1,21 @@
+/**
+ * @ngdoc object
+ * @name ui.router.state.$stateProvider
+ *
+ * @requires $urlRouterProvider
+ * @requires $urlMatcherFactoryProvider
+ * @requires $locationProvider
+ *
+ * @description
+ * The new $stateProvider works similar to Angular's v1 router, but it focuses purely on state.
+ *
+ * - A state corresponds to a "place" in the application in terms of the overall UI and navigation.
+ * - A state describes (via the controller / template / view properties) what the UI looks like and does at that place.
+ * - States often have things in common, and the primary way of factoring out these commonalities in this model is via the state hierarchy, i.e. parent/child states aka nested states.
+ *
+ * TODO:Description++
+ * TODO:Examples
+ */
 $StateProvider.$inject = ['$urlRouterProvider', '$urlMatcherFactoryProvider', '$locationProvider'];
 function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory,           $locationProvider) {
 
@@ -181,6 +199,36 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory,           $
 
   // .state(state)
   // .state(name, state)
+
+  /**
+   * @ngdoc function
+   * @name ui.router.state.$stateProvider#state
+   * @methodOf ui.router.state.$stateProvider
+   *
+   * @param {string} name Name or Full name of the state.
+   *
+   * Full name refers to a state name that also defines it's parent state in the name, e.g. if you provide the name
+   * `my.state` it is assumed that `my` is another defined state and it will set that state as parent to this state.
+   *
+   * @param {Object} state All information about the state.
+   *
+   * Object properties:
+   * - `views`: `{Object=}` A list og views to be updated when the state is activated.
+   * - `url`: `{string=}` A url to associate the state with.
+   * - `onEnter`: `{string|function|Object=}` value
+   * - `onExit`: `{string|function|Object=}` value
+   *
+   * TODO:Properties
+   *
+   * @returns {Object} self
+   *
+   * @description
+   * Adds a new state configuration to the `$stateProvider`.
+   *
+   * TODO:Description++
+   * TODO:Examples
+   * TODO:.state(state)
+   */
   this.state = state;
   function state(name, definition) {
     /*jshint validthis: true */
@@ -191,9 +239,85 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory,           $
   }
 
   // $urlRouter is injected just to ensure it gets instantiated
+
+  /**
+   * $ngdoc object
+   * $name ui.router.state.$state
+   *
+   * $requires $rootScope
+   * $requires $q
+   * $requires $view
+   * $requires $injector
+   * $requires $stateParams
+   * $requires $location
+   * $requires $urlRouter
+   *
+   * @property {Object} current Reference to the current state loaded.
+   * @property {Object} params Parameters loaded for the current state.
+   * @property {Object} transition TODO:???.
+   *
+   * @description
+   * You can define states through the {@link ui.router.state.$stateProvider $stateProvider}.
+   *
+   * TODO:Description++
+   * TODO:Examples
+   */
   this.$get = $get;
   $get.$inject = ['$rootScope', '$q', '$view', '$injector', '$stateParams', '$location', '$urlRouter'];
   function $get(   $rootScope,   $q,   $view,   $injector,   $stateParams,   $location,   $urlRouter) {
+
+    /**
+     * @ngdoc event
+     * @name ui.router.state.$state#$stateChangeStart
+     * @eventOf ui.router.state.$state
+     *
+     * @eventType broadcast on root scope
+     *
+     * @description
+     * Broadcasted before a state change. At this  point the state services starts
+     * resolving all of the dependencies needed for the state change to occurs.
+     *
+     * @param {Object} angularEvent Synthetic event object.
+     * @param {State} next Future state.
+     * @param {State} toParams Future state params.
+     * @param {State} from Current state.
+     * @param {State} fromParams Current state params.
+     */
+
+    /**
+     * @ngdoc event
+     * @name ui.router.state.$state#$stateChangeSuccess
+     * @eventOf ui.router.state.$state
+     *
+     * @eventType broadcast on root scope
+     *
+     * @description
+     * Broadcasted after a route dependencies are resolved.
+     *
+     * @param {Object} angularEvent Synthetic event object.
+     * @param {State} next Future state.
+     * @param {State} toParams Future state params.
+     * @param {State} from Current state.
+     * @param {State} fromParams Current state params.
+     */
+
+    /**
+     * @ngdoc event
+     * @name ui.router.state.$state#$stateChangeError
+     * @eventOf ui.router.state.$state
+     *
+     * @eventType broadcast on root scope
+     *
+     * @description
+     * Broadcasted if any of the resolve promises are rejected.
+     *
+     * @param {Object} angularEvent Synthetic event object.
+     * @param {State} next Future state.
+     * @param {State} toParams Future state params.
+     * @param {State} from Current state.
+     * @param {State} fromParams Current state params.
+     * @param {Object} rejection Rejection of the promise. Usually the error of the failed promise.
+     */
 
     var TransitionSuperseded = $q.reject(new Error('transition superseded'));
     var TransitionPrevented = $q.reject(new Error('transition prevented'));
@@ -205,10 +329,44 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory,           $
       transition: null
     };
 
+    /**
+     * @ngdoc method
+     * @name ui.router.state.$state#go
+     * @methodOf ui.router.state.$state
+     *
+     * @param {State|string} to The state that should be activated
+     * @param {Object} params A set of parameters for the state that should be activated TODO:Parameters???
+     * @param {Object} options A Set of options TODO:Parameters???
+     *
+     * @returns {*} TODO:???
+     *
+     * @description
+     * Performs a transition to a state, keeping the parameters for the parent state if navigating to siblings.
+     *
+     * TODO:Description++
+     * TODO:Examples
+     */
     $state.go = function go(to, params, options) {
       return this.transitionTo(to, params, extend({ inherit: true, relative: $state.$current }, options));
     };
 
+    /**
+     * @ngdoc method
+     * @name ui.router.state.$state#transitionTo
+     * @methodOf ui.router.state.$state
+     *
+     * @param {State|string} to The state that should be activated
+     * @param {Object} toParams A set of parameters for the state that should be activated TODO:Parameters???
+     * @param {Object} options A Set of options TODO:Parameters???
+     *
+     * @returns {*} TODO:???
+     *
+     * @description
+     * Performs a transition to a state.
+     *
+     * TODO:Description++
+     * TODO:Examples
+     */
     $state.transitionTo = function transitionTo(to, toParams, options) {
       if (!isDefined(options)) options = (options === true || options === false) ? { location: options } : {};
       options = extend({ location: true, inherit: false, relative: null }, options);
@@ -314,16 +472,70 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory,           $
       return transition;
     };
 
+
+    /**
+     * @ngdoc method
+     * @name ui.router.state.$state#is
+     * @methodOf ui.router.state.$state
+     *
+     * @param {State|string} stateOrName A State or state name to compare the current active state to
+     *
+     * @returns {*} returns true if the state is the one currently active, otherwise undefined TODO:??? - should we not return false?
+     *
+     * @description
+     * Compares the currently active state to the provided state or state name.
+     *
+     * TODO:Description++
+     * TODO:Examples
+     */
     $state.is = function is(stateOrName) {
       var state = findState(stateOrName);
       return (isDefined(state)) ? $state.$current === state : undefined;
     };
 
+    /**
+     * @ngdoc method
+     * @name ui.router.state.$state#includes
+     * @methodOf ui.router.state.$state
+     *
+     * @param {State|string} stateOrName A State or state name to check against the current active state branch.
+     *
+     * @returns {*} returns true if the state is the one currently active or is a parent to the one currently active,
+     *              otherwise undefined TODO:??? - should we not return false?
+     *
+     * @description
+     * Compares the currently active state branch to the provided state or state name.
+     *
+     * TODO:Description++
+     * TODO:Examples
+     */
     $state.includes = function includes(stateOrName) {
       var state = findState(stateOrName);
       return (isDefined(state)) ? isDefined($state.$current.includes[state.name]) : undefined;
     };
 
+    /**
+     * @ngdoc method
+     * @name ui.router.state.$state#href
+     * @methodOf ui.router.state.$state
+     *
+     * @param {State|string} stateOrName A State or state name to generate an url for.
+     * @param {Object} params A set of parameters to use when generating the url.
+     * @param {Object=} options A Set of options to use when generating the url.
+     *
+     * Object properties:
+     * - `relative`: `{State=}` TODO:???
+     * - `lossy`: `{boolean=}` TODO:???
+     * - `inherit`: `{boolean=}` TODO:???
+     *
+     * @returns {*} returns the generated url. TODO:return-type???
+     *
+     * @description
+     * Generates an url for the provided state using the given parameters and options.
+     *
+     * TODO:Description++
+     * TODO:Examples
+     */
     $state.href = function href(stateOrName, params, options) {
       options = extend({ lossy: true, inherit: false, relative: $state.$current }, options || {});
       var state = findState(stateOrName, options.relative);
@@ -335,6 +547,21 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory,           $
       return !$locationProvider.html5Mode() && url ? "#" + url : url;
     };
 
+    /**
+     * @ngdoc method
+     * @name ui.router.state.$state#get
+     * @methodOf ui.router.state.$state
+     *
+     * @param {State|string} stateOrName Gets the configuration of a state.
+     *
+     * @returns {State} returns the state configuration.
+     *
+     * @description
+     * Compares the currently active state branch to the provided state or state name.
+     *
+     * TODO:Description++
+     * TODO:Examples
+     */
     $state.get = function (stateOrName) {
       var state = findState(stateOrName);
       return (state && state.self) ? state.self : null;
